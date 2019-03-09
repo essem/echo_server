@@ -23,7 +23,9 @@ defmodule EchoServer.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ranch, "~> 1.7"}
+      {:ranch, "~> 1.7"},
+      {:plug_cowboy, "~> 2.0"},
+      {:poison, "~> 3.1"}
     ]
   end
 end

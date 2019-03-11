@@ -10,6 +10,7 @@ defmodule EchoServer.Application do
     http_port = String.to_integer(System.get_env("ECHO_SERVER_HTTP_PORT") || "8080")
 
     children = [
+      EchoServer.Repo,
       {EchoServer, %{port: port}},
       Plug.Cowboy.child_spec(
         scheme: :http,

@@ -2,6 +2,15 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+config :echo_server, EchoServer.Repo,
+  database: "echo",
+  username: "devuser",
+  password: "devpass",
+  hostname: "127.0.0.1",
+  port: 3306
+
+config :echo_server, ecto_repos: [EchoServer.Repo]
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

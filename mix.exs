@@ -26,6 +26,7 @@ defmodule EchoServer.MixProject do
       {:ranch, "~> 1.7"},
       {:plug_cowboy, "~> 2.0"},
       {:poison, "~> 3.1"},
+      {:httpoison, "~> 1.4"},
       {:ecto_sql, "~> 3.0"},
       {:mariaex, ">= 0.0.0"}
     ]

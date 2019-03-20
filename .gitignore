@@ -24,3 +24,6 @@ echo_server-*.tar
 
 # Elixir Language Server files
 .elixir_ls
+
+# Personal config file
+config/local.exs

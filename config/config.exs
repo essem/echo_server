@@ -30,10 +30,24 @@ config :echo_server, ecto_repos: [EchoServer.Repo]
 #     config :logger, level: :info
 #
 
+config_dir = Path.dirname(__ENV__.file)
+
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
 # by uncommenting the line below and defining dev.exs, test.exs and such.
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
-#
-#     import_config "#{Mix.env()}.exs"
+
+if File.exists?(Path.join(config_dir, "#{Mix.env()}.exs")) do
+  import_config "#{Mix.env()}.exs"
+end
+
+# Most priority config file "local.exs"
+# This file is for personal setting.
+# Do not add it to source control system
+
+config_dir = Path.dirname(__ENV__.file)
+
+if File.exists?(Path.join(config_dir, "local.exs")) do
+  import_config "local.exs"
+end

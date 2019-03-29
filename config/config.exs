@@ -31,9 +31,9 @@ config :echo_server, :kubernetes,
 #     Application.get_env(:echo_server, :key)
 #
 # You can also configure a third-party app:
-#
-#     config :logger, level: :info
-#
+
+config :logger, level: :info
+config :logger, :console, format: "$time $metadata[$level] $levelpad$message\n"
 
 config_dir = Path.dirname(__ENV__.file)
 

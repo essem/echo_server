@@ -7,7 +7,7 @@ defmodule EchoServer do
   end
 
   def init(args) do
-    Logger.info("Listen on port #{args.port}")
+    Logger.info("Listen on port #{args.port} (binary)")
 
     opts = %{
       num_acceptors: 100,
@@ -20,7 +20,7 @@ defmodule EchoServer do
     }
 
     {:ok, _} = :ranch.start_listener(__MODULE__, :ranch_tcp, opts, EchoServer.Handler, [])
-    Logger.info(inspect(:ranch.info(__MODULE__)))
+    Logger.debug(inspect(:ranch.info(__MODULE__)))
 
     {:ok, %{}}
   end

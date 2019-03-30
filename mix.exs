@@ -24,6 +24,7 @@ defmodule EchoServer.MixProject do
   defp deps do
     [
       {:ranch, "~> 1.7"},
+      {:proxy_protocol, "~> 0.0.1"},
       {:plug_cowboy, "~> 2.0"},
       {:poison, "~> 3.1"},
       {:httpoison, "~> 1.4"},

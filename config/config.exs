@@ -9,7 +9,9 @@ config :echo_server, EchoServer.Repo,
   hostname: "127.0.0.1",
   port: 3306
 
-config :echo_server, ecto_repos: [EchoServer.Repo]
+config :echo_server,
+  ecto_repos: [EchoServer.Repo],
+  use_proxy_protocol: false
 
 config :echo_server, :kubernetes,
   master_host: "kube-master",

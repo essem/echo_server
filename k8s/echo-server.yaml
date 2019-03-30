@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: echo-server-config
+data:
+  local.exs: |-
+    use Mix.Config
+
+    config :echo_server,
+      use_proxy_protocol: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-server
+spec:
+  selector:
+    matchLabels:
+      app: echo-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: echo-server
+    spec:
+      containers:
+        - image: 380863792209.dkr.ecr.ap-northeast-2.amazonaws.com/p3/echo-server:latest
+          name: echo-server
+          env:
+            - name: ECHO_SERVER_PORT
+              value: "8000"
+            - name: ECHO_SERVER_HTTP_PORT
+              value: "0"
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: config
+              mountPath: /opt/app/config/local.exs
+              subPath: local.exs
+      volumes:
+        - name: config
+          configMap:
+            name: echo-server-config
+      imagePullSecrets:
+        - name: registry-pass
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-server
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "3600"
+    service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+spec:
+  ports:
+    - port: 8000
+  selector:
+    app: echo-server
+  type: LoadBalancer

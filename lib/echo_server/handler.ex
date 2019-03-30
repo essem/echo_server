@@ -3,17 +3,12 @@ defmodule EchoServer.Handler do
   require Logger
 
   def start_link(ref, socket, transport, _args) do
-    peername =
-      case :inet.peername(socket) do
-        {:ok, {address, port}} -> "#{:inet.ntoa(address)}:#{port}"
-        _ -> "unknwon"
-      end
-
     state = %{
       ref: ref,
       transport: transport,
       socket: socket,
-      peername: peername
+      peername: "unknown",
+      health_check?: false
     }
 
     GenServer.start_link(__MODULE__, state)
@@ -26,16 +21,53 @@ defmodule EchoServer.Handler do
   end
 
   def handle_info(:async_init, state) do
-    Logger.info("connection from #{state.peername}")
-    Logger.debug("socket option #{get_socket_options(state.socket)}")
-
     :ranch_tcp = state.transport
     {:tcp, :tcp_closed, :tcp_error} = :ranch_tcp.messages()
 
     {:ok, _} = :ranch.handshake(state.ref)
-    state.transport.setopts(state.socket, active: :once)
 
-    {:noreply, state}
+    if Application.get_env(:echo_server, :use_proxy_protocol) do
+      {:ok, data} = state.transport.recv(state.socket, 0, 1000)
+
+      # TODO: prepare the case when data lenght is not enought for proxy header
+
+      {:ok, result} = ProxyProtocol.parse(data)
+      Logger.debug("proxy info #{inspect(result.proxy)}")
+
+      peername = "#{result.proxy.src_address}:#{result.proxy.src_port}"
+      health_check? = String.starts_with?(peername, "10.")
+
+      state =
+        state
+        |> Map.put(:peername, "#{result.proxy.src_address}:#{result.proxy.src_port}")
+        |> Map.put(:health_check?, health_check?)
+
+      if !state.health_check? do
+        Logger.info("connection from #{state.peername}")
+        Logger.debug("socket option #{get_socket_options(state.socket)}")
+      end
+
+      if byte_size(result.buffer) > 0 do
+        handle_info({:tcp, state.socket, data}, state)
+      else
+        state.transport.setopts(state.socket, active: :once)
+        {:noreply, state}
+      end
+    else
+      peername =
+        case :inet.peername(state.socket) do
+          {:ok, {address, port}} -> "#{:inet.ntoa(address)}:#{port}"
+          _ -> "unknwon"
+        end
+
+      state = Map.put(state, :peername, peername)
+
+      Logger.info("connection from #{state.peername}")
+      Logger.debug("socket option #{get_socket_options(state.socket)}")
+
+      state.transport.setopts(state.socket, active: :once)
+      {:noreply, state}
+    end
   end
 
   def handle_info({:tcp, _socket, data}, state) do
@@ -48,7 +80,9 @@ defmodule EchoServer.Handler do
   end
 
   def handle_info({:tcp_closed, _socket}, state) do
-    Logger.info("closed from #{state.peername}")
+    if !state.health_check? do
+      Logger.info("closed from #{state.peername}")
+    end
 
     {:stop, :normal, state}
   end
